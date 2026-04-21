@@ -20,9 +20,16 @@ namespace VAWCV5Tubod
         private int loadedRespId;
         private DateTime loadedComplaintDate;
         private bool formInitialized;
+        private readonly string currentUsername;
 
         public ManageCase()
+            : this(string.Empty)
         {
+        }
+
+        public ManageCase(string currentUsername)
+        {
+            this.currentUsername = currentUsername;
             InitializeComponent();
             ConfigureForm();
         }
@@ -537,6 +544,13 @@ namespace VAWCV5Tubod
                 UpdateCaseRecord(connection, transaction);
 
                 transaction.Commit();
+
+                UserLogService.Log(
+                    currentUsername,
+                    "UpdateCase",
+                    "caselist",
+                    loadedCaseId,
+                    $"Updated case record for {BuildFullName(updt_comp_lastname.Text, updt_comp_firstname.Text, updt_comp_middlename.Text)}.");
 
                 MessageBox.Show(
                     "Case information was updated successfully.",

@@ -86,6 +86,13 @@ namespace VAWCV5Tubod
                     return;
                 }
 
+                UserLogService.Log(
+                    rememberedUser.Username,
+                    "Login",
+                    "users",
+                    rememberedUser.UserId,
+                    "Restored remembered login session.");
+
                 OpenDashboard(rememberedUser);
             }
             catch
@@ -119,6 +126,13 @@ namespace VAWCV5Tubod
 
                 if (user == null)
                 {
+                    UserLogService.Log(
+                        username,
+                        "LoginFailed",
+                        "users",
+                        0,
+                        "Failed login attempt.");
+
                     MessageBox.Show(
                         "Invalid username or password. Please try again.",
                         "Login Failed",
@@ -138,6 +152,13 @@ namespace VAWCV5Tubod
                 {
                     rememberedLoginStore.Clear();
                 }
+
+                UserLogService.Log(
+                    user.Username,
+                    "Login",
+                    "users",
+                    user.UserId,
+                    "Logged in to the system.");
 
                 OpenDashboard(user);
             }
@@ -192,7 +213,7 @@ namespace VAWCV5Tubod
                 new[] { user.FirstName.Trim(), middleInitial, user.LastName.Trim() }
                     .Where(part => !string.IsNullOrWhiteSpace(part)));
 
-            LandingForm dashboard = new(fullName, user.Position, user.UserId);
+            LandingForm dashboard = new(fullName, user.Position, user.UserId, user.Username);
             dashboard.WindowState = FormWindowState.Maximized;
             dashboard.FormClosed += (_, _) =>
             {

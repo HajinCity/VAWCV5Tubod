@@ -37,7 +37,7 @@
             // panel1
             // 
             this.panel1.AutoScroll = true;
-            this.panel1.Location = new System.Drawing.Point(826, 4620);
+            this.panel1.Location = new System.Drawing.Point(691, 2085);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 148);
             this.panel1.TabIndex = 4;
@@ -48,13 +48,13 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1225, 1806);
+            this.panel2.Size = new System.Drawing.Size(1242, 2051);
             this.panel2.TabIndex = 5;
             // 
             // censusData1
             // 
             this.censusData1.BackColor = System.Drawing.Color.White;
-            this.censusData1.Location = new System.Drawing.Point(13, 12);
+            this.censusData1.Location = new System.Drawing.Point(25, 12);
             this.censusData1.Name = "censusData1";
             this.censusData1.Size = new System.Drawing.Size(1200, 1772);
             this.censusData1.TabIndex = 0;
@@ -65,7 +65,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.White;
-            this.ClientSize = new System.Drawing.Size(1242, 1100);
+            this.ClientSize = new System.Drawing.Size(1259, 1100);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;

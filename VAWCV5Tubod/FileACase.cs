@@ -27,8 +27,16 @@ namespace VAWCV5Tubod
         private const string Ra9262ViolationText =
             "R.A. 9262: Anti Violence Against Women and their Children Act";
 
+        private readonly string currentUsername;
+
         public FileACase()
+            : this(string.Empty)
         {
+        }
+
+        public FileACase(string currentUsername)
+        {
+            this.currentUsername = currentUsername;
             InitializeComponent();
             Load += FileACase_Load;
             FormClosed += FileACase_FormClosed;
@@ -257,9 +265,16 @@ namespace VAWCV5Tubod
 
                 int complainantId = SaveComplainant(connection, transaction);
                 int respondentId = SaveRespondent(connection, transaction);
-                SaveCaseData(connection, transaction, complainantId, respondentId);
+                int caseId = SaveCaseData(connection, transaction, complainantId, respondentId);
 
                 transaction.Commit();
+
+                UserLogService.Log(
+                    currentUsername,
+                    "AddCase",
+                    "caselist",
+                    caseId,
+                    $"Created new case record for {BuildFullName(comp_lastname.Text, comp_firstname.Text, comp_middlename.Text)}.");
 
                 MessageBox.Show(
                     "Case information was saved successfully.",
@@ -459,7 +474,7 @@ namespace VAWCV5Tubod
             comboBox.EndUpdate();
         }
 
-        private void SaveCaseData(MySqlConnection connection, MySqlTransaction transaction, int complainantId, int respondentId)
+        private int SaveCaseData(MySqlConnection connection, MySqlTransaction transaction, int complainantId, int respondentId)
         {
             Caselist caseInfo = new()
             {
@@ -512,6 +527,8 @@ namespace VAWCV5Tubod
             command.Parameters.AddWithValue("@incidentdate", caseInfo.IncidentDate);
             command.Parameters.AddWithValue("@incidentdescription", caseInfo.IncidentDescription);
             command.ExecuteNonQuery();
+
+            return caseInfo.CaseId;
         }
 
         private static int ParseIntOrZero(string value)

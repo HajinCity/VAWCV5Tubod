@@ -232,7 +232,7 @@
             // panel28
             // 
             this.panel28.BackColor = System.Drawing.Color.Black;
-            this.panel28.Location = new System.Drawing.Point(502, 1036);
+            this.panel28.Location = new System.Drawing.Point(502, 1002);
             this.panel28.Name = "panel28";
             this.panel28.Size = new System.Drawing.Size(262, 1);
             this.panel28.TabIndex = 326;
@@ -240,7 +240,7 @@
             // panel27
             // 
             this.panel27.BackColor = System.Drawing.Color.Black;
-            this.panel27.Location = new System.Drawing.Point(62, 1036);
+            this.panel27.Location = new System.Drawing.Point(62, 1002);
             this.panel27.Name = "panel27";
             this.panel27.Size = new System.Drawing.Size(262, 1);
             this.panel27.TabIndex = 322;
@@ -337,7 +337,7 @@
             // 
             this.label25.AutoSize = true;
             this.label25.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label25.Location = new System.Drawing.Point(587, 1040);
+            this.label25.Location = new System.Drawing.Point(587, 1006);
             this.label25.Name = "label25";
             this.label25.Size = new System.Drawing.Size(100, 18);
             this.label25.TabIndex = 313;
@@ -347,7 +347,7 @@
             // 
             this.label24.AutoSize = true;
             this.label24.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label24.Location = new System.Drawing.Point(98, 1040);
+            this.label24.Location = new System.Drawing.Point(98, 1006);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(197, 18);
             this.label24.TabIndex = 312;

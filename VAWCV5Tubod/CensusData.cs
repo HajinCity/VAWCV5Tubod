@@ -29,6 +29,9 @@ namespace VAWCV5Tubod
         private readonly Label noRecordsLabel = new Label();
         private bool hasReportData;
 
+        public string CurrentUserFullName { get; set; } = string.Empty;
+        public string CurrentUsername { get; set; } = string.Empty;
+
         public CensusData()
         {
             InitializeComponent();
@@ -545,6 +548,13 @@ namespace VAWCV5Tubod
                     {
                         ExportToCsv(dialog.FileName);
                     }
+
+                    UserLogService.Log(
+                        CurrentUsername,
+                        "ExportCensusDashboard",
+                        "census_dashboard",
+                        0,
+                        $"Exported census dashboard for {BuildSelectedDateRangeDescription()}.");
                 }
             }
         }
@@ -754,15 +764,20 @@ namespace VAWCV5Tubod
                     preview.WindowState = FormWindowState.Maximized;
                     preview.ShowDialog();
                 }
+
+                UserLogService.Log(
+                    CurrentUsername,
+                    "PrintCensusDashboard",
+                    "census_dashboard",
+                    0,
+                    $"Opened print preview for census dashboard for {BuildSelectedDateRangeDescription()}.");
             }
         }
 
         private void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
         {
-            using (Bitmap bitmap = new Bitmap(Width, Height))
+            using (Bitmap bitmap = CapturePrintableDashboardBitmap())
             {
-                DrawToBitmap(bitmap, new Rectangle(0, 0, Width, Height));
-
                 float scaleX = (e.PageBounds.Width - 40F) / bitmap.Width;
                 float scaleY = (e.PageBounds.Height - 40F) / bitmap.Height;
                 float scale = Math.Min(scaleX, scaleY);
@@ -772,6 +787,107 @@ namespace VAWCV5Tubod
                 int x = (e.PageBounds.Width - width) / 2;
                 e.Graphics.DrawImage(bitmap, x, 20, width, height);
             }
+        }
+
+        private Bitmap CapturePrintableDashboardBitmap()
+        {
+            Label printDateRangeLabel = CreatePrintDateRangeLabel();
+            Label generatedByLabel = CreateGeneratedByLabel();
+            bool refreshVisible = btnRefresh.Visible;
+            bool printVisible = btnPrint.Visible;
+            bool exportVisible = btnExport.Visible;
+            bool startPickerVisible = dtpStartDate.Visible;
+            bool endPickerVisible = dtpEndDate.Visible;
+            bool startLabelVisible = lblStartDate.Visible;
+            bool endLabelVisible = lblEndDate.Visible;
+            bool titleVisible = lblTitle.Visible;
+
+            try
+            {
+                lblTitle.Visible = false;
+                btnRefresh.Visible = false;
+                btnPrint.Visible = false;
+                btnExport.Visible = false;
+                dtpStartDate.Visible = false;
+                dtpEndDate.Visible = false;
+                lblStartDate.Visible = false;
+                lblEndDate.Visible = false;
+
+                panelHeader.Controls.Add(printDateRangeLabel);
+                printDateRangeLabel.BringToFront();
+                panelCharts.Controls.Add(generatedByLabel);
+                generatedByLabel.BringToFront();
+                panelHeader.PerformLayout();
+                panelCharts.PerformLayout();
+                Refresh();
+
+                Bitmap bitmap = new Bitmap(Width, Height);
+                DrawToBitmap(bitmap, new Rectangle(0, 0, Width, Height));
+                return bitmap;
+            }
+            finally
+            {
+                panelHeader.Controls.Remove(printDateRangeLabel);
+                printDateRangeLabel.Dispose();
+
+                panelCharts.Controls.Remove(generatedByLabel);
+                generatedByLabel.Dispose();
+
+                btnRefresh.Visible = refreshVisible;
+                btnPrint.Visible = printVisible;
+                btnExport.Visible = exportVisible;
+                dtpStartDate.Visible = startPickerVisible;
+                dtpEndDate.Visible = endPickerVisible;
+                lblStartDate.Visible = startLabelVisible;
+                lblEndDate.Visible = endLabelVisible;
+                lblTitle.Visible = titleVisible;
+            }
+        }
+
+        private Label CreatePrintDateRangeLabel()
+        {
+            Label printDateRangeLabel = new Label
+            {
+                AutoSize = false,
+                BackColor = Color.Transparent,
+                Font = new Font("Arial", 18F, FontStyle.Bold),
+                ForeColor = Color.Black,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Text = $"From: {dtpStartDate.Value:MMMM d, yyyy}    To: {dtpEndDate.Value:MMMM d, yyyy}"
+            };
+
+            int labelWidth = 760;
+            printDateRangeLabel.Size = new Size(labelWidth, 40);
+            printDateRangeLabel.Location = new Point((panelHeader.Width - labelWidth) / 2, 20);
+
+            return printDateRangeLabel;
+        }
+
+        private Label CreateGeneratedByLabel()
+        {
+            string generatedByName = string.IsNullOrWhiteSpace(CurrentUserFullName)
+                ? "Unknown User"
+                : CurrentUserFullName.Trim();
+
+            Label generatedByLabel = new Label
+            {
+                AutoSize = false,
+                BackColor = Color.Transparent,
+                Font = new Font("Arial", 11F, FontStyle.Bold),
+                ForeColor = Color.Black,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Text = $"Generated by: {generatedByName}"
+            };
+
+            generatedByLabel.Size = new Size(panelCharts.Width - 80, 34);
+            generatedByLabel.Location = new Point(40, panelCharts.Height - generatedByLabel.Height - 12);
+
+            return generatedByLabel;
+        }
+
+        private string BuildSelectedDateRangeDescription()
+        {
+            return $"{dtpStartDate.Value:MMMM d, yyyy} to {dtpEndDate.Value:MMMM d, yyyy}";
         }
     }
 }

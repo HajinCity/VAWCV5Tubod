@@ -15,19 +15,21 @@ namespace VAWCV5Tubod
     public partial class SystemManagement : Form
     {
         private readonly string currentUserRole;
+        private readonly string currentUsername;
         private readonly int currentUserId;
         private DataTable? hotlineData;
 
         public SystemManagement()
-            : this(string.Empty, string.Empty, 0)
+            : this(string.Empty, string.Empty, 0, string.Empty)
         {
         }
 
-        public SystemManagement(string currentUserFullName, string currentUserRole, int currentUserId)
+        public SystemManagement(string currentUserFullName, string currentUserRole, int currentUserId, string currentUsername = "")
         {
             InitializeComponent();
             this.currentUserRole = currentUserRole;
             this.currentUserId = currentUserId;
+            this.currentUsername = currentUsername;
             ConfigureForm();
             Load += SystemManagement_Load;
         }
@@ -280,6 +282,13 @@ namespace VAWCV5Tubod
                     LoadUsersGrid();
                 }
 
+                UserLogService.Log(
+                    currentUsername,
+                    "UpdateProfile",
+                    "users",
+                    currentUserId,
+                    "Updated own account name.");
+
                 MessageBox.Show(
                     "Account information updated successfully.",
                     "Saved",
@@ -346,6 +355,13 @@ namespace VAWCV5Tubod
                 }
 
                 File.WriteAllText(dialog.FileName, dumpContent, Encoding.UTF8);
+
+                UserLogService.Log(
+                    currentUsername,
+                    "BackupDatabase",
+                    "database",
+                    0,
+                    "Created database backup.");
 
                 MessageBox.Show(
                     $"Backup completed successfully.{Environment.NewLine}{dialog.FileName}",
@@ -465,6 +481,13 @@ namespace VAWCV5Tubod
                 textBox5.Clear();
                 textBox6.Clear();
 
+                UserLogService.Log(
+                    currentUsername,
+                    "ChangePassword",
+                    "users",
+                    currentUserId,
+                    "Changed own password.");
+
                 MessageBox.Show(
                     "Your password has been changed successfully.",
                     "Password Updated",
@@ -485,6 +508,13 @@ namespace VAWCV5Tubod
         {
             if (!string.Equals(currentUserRole, "Admin", StringComparison.OrdinalIgnoreCase))
             {
+                UserLogService.Log(
+                    currentUsername,
+                    "UnauthorizedAccess",
+                    "users",
+                    currentUserId,
+                    "User attempted to create a new user account.");
+
                 MessageBox.Show(
                     "Only Admin users are allowed to create new user accounts.",
                     "Access Denied",
@@ -556,6 +586,7 @@ namespace VAWCV5Tubod
 
                 using MySqlConnection connection = DbConnectionFactory.CreateConnection();
                 connection.Open();
+                int newUserId = 0;
 
                 using (MySqlCommand existsCommand = new(existsQuery, connection))
                 {
@@ -584,10 +615,18 @@ namespace VAWCV5Tubod
                     insertCommand.Parameters.AddWithValue("@middlename", middleInitial);
                     insertCommand.Parameters.AddWithValue("@position", role);
                     insertCommand.ExecuteNonQuery();
+                    newUserId = Convert.ToInt32(insertCommand.LastInsertedId);
                 }
 
                 ClearNewUserFields();
                 LoadUsersGrid();
+
+                UserLogService.Log(
+                    currentUsername,
+                    "CreateAccount",
+                    "users",
+                    newUserId,
+                    $"Created account for {username} ({role}).");
 
                 MessageBox.Show(
                     "The new user account was created successfully.",
@@ -646,6 +685,13 @@ namespace VAWCV5Tubod
                     "Optimization Complete",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
+
+                UserLogService.Log(
+                    currentUsername,
+                    "OptimizeDatabase",
+                    "database",
+                    0,
+                    $"Optimized {optimizedTables.Count} database table(s).");
             }
             catch (Exception ex)
             {
@@ -679,6 +725,13 @@ namespace VAWCV5Tubod
         {
             if (!string.Equals(currentUserRole, "Admin", StringComparison.OrdinalIgnoreCase))
             {
+                UserLogService.Log(
+                    currentUsername,
+                    "UnauthorizedAccess",
+                    "purok",
+                    0,
+                    "User attempted to add a new purok entry.");
+
                 MessageBox.Show(
                     "Only Admin users are allowed to add new purok entries.",
                     "Access Denied",
@@ -715,6 +768,7 @@ namespace VAWCV5Tubod
 
                 using MySqlConnection connection = DbConnectionFactory.CreateConnection();
                 connection.Open();
+                int purokId = 0;
 
                 using (MySqlCommand existsCommand = new(existsQuery, connection))
                 {
@@ -738,10 +792,18 @@ namespace VAWCV5Tubod
                 {
                     insertCommand.Parameters.AddWithValue("@purokName", purokName);
                     insertCommand.ExecuteNonQuery();
+                    purokId = Convert.ToInt32(insertCommand.LastInsertedId);
                 }
 
                 textBox17.Clear();
                 LoadPurokGrid(true);
+
+                UserLogService.Log(
+                    currentUsername,
+                    "AddPurok",
+                    "purok",
+                    purokId,
+                    $"Added purok entry {purokName}.");
 
                 MessageBox.Show(
                     "The purok was added successfully.",

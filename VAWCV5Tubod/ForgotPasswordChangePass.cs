@@ -40,8 +40,15 @@ namespace VAWCV5Tubod
 
             try
             {
-                if (!TryValidateAdminUsername(username, out string errorMessage))
+                if (!TryValidateSecretaryUsername(username, out string errorMessage))
                 {
+                    UserLogService.Log(
+                        username,
+                        "ForgotPasswordDenied",
+                        "users",
+                        0,
+                        errorMessage);
+
                     MessageBox.Show(
                         errorMessage,
                         "Forgot Password",
@@ -65,7 +72,7 @@ namespace VAWCV5Tubod
             }
         }
 
-        private static bool TryValidateAdminUsername(string username, out string errorMessage)
+        private static bool TryValidateSecretaryUsername(string username, out string errorMessage)
         {
             const string query = """
                 SELECT position
@@ -90,9 +97,9 @@ namespace VAWCV5Tubod
 
             string position = Convert.ToString(result)?.Trim() ?? string.Empty;
 
-            if (!string.Equals(position, "Admin", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(position, "Secretary", StringComparison.OrdinalIgnoreCase))
             {
-                errorMessage = "Only users with the Admin role can reset a password here.";
+                errorMessage = "Only users with the Secretary role can reset a password here.";
                 return false;
             }
 

@@ -14,15 +14,30 @@ namespace VAWCV5Tubod
 {
     public partial class Documents : Form
     {
+        private const string GeneratedByFallbackName = "Unknown User";
+        private const float GeneratedByGap = 8f;
+        private const float PrintContentPadding = 10f;
+
         private UserControl? currentUserControl;
         private IntakeForm? intakeForm;
         private ReferralForm? referralForm;
         private readonly PrintDocument printDocument;
+        private readonly string currentUserFullName;
+        private readonly string currentUsername;
         private Bitmap? pendingPrintBitmap;
 
         public Documents()
+            : this(string.Empty, string.Empty)
         {
+        }
+
+        public Documents(string currentUserFullName, string currentUsername = "")
+        {
+            this.currentUserFullName = currentUserFullName;
+            this.currentUsername = currentUsername;
             printDocument = new PrintDocument();
+            printDocument.OriginAtMargins = false;
+            printDocument.DefaultPageSettings.Margins = new Margins(10, 10, 10, 10);
             InitializeComponent();
             SetupEventHandlers();
             ShowIntakeForm();
@@ -47,17 +62,20 @@ namespace VAWCV5Tubod
                 pendingPrintBitmap = CaptureCurrentControlBitmap();
                 printDocument.DocumentName = BuildDocumentName();
 
-                using PrintDialog dialog = new()
+                using PrintPreviewDialog previewDialog = new()
                 {
                     Document = printDocument,
-                    UseEXDialog = true
+                    UseAntiAlias = true,
+                    WindowState = FormWindowState.Maximized
                 };
 
-                if (dialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    printDocument.Print();
-                    return;
-                }
+                previewDialog.ShowDialog(this);
+                UserLogService.Log(
+                    currentUsername,
+                    "PrintDocument",
+                    "documents",
+                    ParseCaseIdOrZero(),
+                    $"Opened print preview for {BuildDocumentName()}.");
 
                 DisposePendingPrintBitmap();
             }
@@ -89,6 +107,13 @@ namespace VAWCV5Tubod
 
                 using Bitmap bitmap = CaptureCurrentControlBitmap();
                 ExportBitmapToPdf(bitmap, dialog.FileName);
+
+                UserLogService.Log(
+                    currentUsername,
+                    "ExportDocument",
+                    "documents",
+                    ParseCaseIdOrZero(),
+                    $"Exported {BuildDocumentName()} to PDF.");
 
                 MessageBox.Show(
                     $"PDF exported successfully.{Environment.NewLine}{dialog.FileName}",
@@ -143,19 +168,29 @@ namespace VAWCV5Tubod
                 return;
             }
 
-            Rectangle marginBounds = e.MarginBounds;
+            e.Graphics.PageUnit = GraphicsUnit.Display;
+            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+
+            RectangleF contentBounds = GetPrintableContentBounds(e);
+            using Font generatedByFont = new("Arial", 11f, FontStyle.Bold);
+            string generatedByText = BuildGeneratedByText();
+            SizeF generatedBySize = e.Graphics.MeasureString(generatedByText, generatedByFont);
+            float availableImageHeight = Math.Max(1f, contentBounds.Height - generatedBySize.Height - GeneratedByGap);
             float scale = Math.Min(
-                marginBounds.Width / (float)pendingPrintBitmap.Width,
-                marginBounds.Height / (float)pendingPrintBitmap.Height);
+                contentBounds.Width / pendingPrintBitmap.Width,
+                availableImageHeight / pendingPrintBitmap.Height);
 
             int drawWidth = (int)(pendingPrintBitmap.Width * scale);
             int drawHeight = (int)(pendingPrintBitmap.Height * scale);
-            int drawX = marginBounds.Left + ((marginBounds.Width - drawWidth) / 2);
-            int drawY = marginBounds.Top + ((marginBounds.Height - drawHeight) / 2);
+            int drawX = (int)(contentBounds.Left + ((contentBounds.Width - drawWidth) / 2f));
+            int drawY = (int)contentBounds.Top;
+            float generatedByY = drawY + drawHeight + GeneratedByGap;
 
             e.Graphics.DrawImage(pendingPrintBitmap, drawX, drawY, drawWidth, drawHeight);
+            e.Graphics.DrawString(generatedByText, generatedByFont, Brushes.Black, drawX, generatedByY);
             e.HasMorePages = false;
-            DisposePendingPrintBitmap();
         }
 
         private void ShowIntakeForm()
@@ -359,6 +394,37 @@ namespace VAWCV5Tubod
                 : new string(textBox1.Text.Trim().Where(char.IsLetterOrDigit).ToArray());
 
             return $"{documentType}_{caseId}";
+        }
+
+        private int ParseCaseIdOrZero()
+        {
+            return int.TryParse(textBox1.Text.Trim(), out int caseId) ? caseId : 0;
+        }
+
+        private string BuildGeneratedByText()
+        {
+            string generatedByName = string.IsNullOrWhiteSpace(currentUserFullName)
+                ? GeneratedByFallbackName
+                : currentUserFullName.Trim();
+
+            return $"Generated by: {generatedByName}";
+        }
+
+        private static RectangleF GetPrintableContentBounds(PrintPageEventArgs e)
+        {
+            RectangleF bounds = e.PageSettings.PrintableArea;
+
+            if (bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                bounds = e.PageBounds;
+            }
+
+            float left = bounds.Left + PrintContentPadding;
+            float top = bounds.Top + PrintContentPadding;
+            float width = Math.Max(1f, bounds.Width - (PrintContentPadding * 2f));
+            float height = Math.Max(1f, bounds.Height - (PrintContentPadding * 2f));
+
+            return new RectangleF(left, top, width, height);
         }
 
         private void DisposePendingPrintBitmap()

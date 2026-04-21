@@ -121,6 +121,13 @@ namespace VAWCV5Tubod
                     return;
                 }
 
+                UserLogService.Log(
+                    username,
+                    "ForgotPassword",
+                    "users",
+                    0,
+                    $"Password reset through forgot password for {username}.");
+
                 MessageBox.Show(
                     "The password was changed successfully.",
                     "Password Updated",
@@ -145,7 +152,7 @@ namespace VAWCV5Tubod
             const string query = """
                 UPDATE users
                 SET password = @password
-                WHERE username = @username AND position = 'Admin';
+                WHERE username = @username AND position = 'Secretary';
                 """;
 
             using MySqlConnection connection = DbConnectionFactory.CreateConnection();

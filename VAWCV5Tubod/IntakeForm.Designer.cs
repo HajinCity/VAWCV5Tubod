@@ -233,7 +233,7 @@
             // panel20
             // 
             this.panel20.BackColor = System.Drawing.Color.Black;
-            this.panel20.Location = new System.Drawing.Point(436, 1039);
+            this.panel20.Location = new System.Drawing.Point(424, 1000);
             this.panel20.Name = "panel20";
             this.panel20.Size = new System.Drawing.Size(361, 1);
             this.panel20.TabIndex = 475;
@@ -602,7 +602,7 @@
             // label65
             // 
             this.label65.AutoSize = true;
-            this.label65.Location = new System.Drawing.Point(41, 1025);
+            this.label65.Location = new System.Drawing.Point(29, 986);
             this.label65.Name = "label65";
             this.label65.Size = new System.Drawing.Size(229, 13);
             this.label65.TabIndex = 438;
@@ -612,7 +612,7 @@
             // 
             this.label64.AutoSize = true;
             this.label64.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold);
-            this.label64.Location = new System.Drawing.Point(495, 1043);
+            this.label64.Location = new System.Drawing.Point(483, 1004);
             this.label64.Name = "label64";
             this.label64.Size = new System.Drawing.Size(236, 19);
             this.label64.TabIndex = 437;
@@ -622,7 +622,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Arial", 12F, System.Drawing.FontStyle.Bold);
-            this.label3.Location = new System.Drawing.Point(63, 1043);
+            this.label3.Location = new System.Drawing.Point(51, 1004);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(184, 19);
             this.label3.TabIndex = 436;
@@ -1033,7 +1033,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.Controls.Add(this.pictureBox3);
-            this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.panel27);
             this.Controls.Add(this.textBox6);
@@ -1128,6 +1127,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label1);
+            this.Controls.Add(this.pictureBox2);
             this.Name = "IntakeForm";
             this.Size = new System.Drawing.Size(818, 1098);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();

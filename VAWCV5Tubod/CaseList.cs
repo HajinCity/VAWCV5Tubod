@@ -12,16 +12,18 @@ namespace VAWCV5Tubod
         private DataTable caseData = new();
         private bool caseDataLoaded;
         private readonly string currentUserPosition;
+        private readonly string currentUsername;
 
         public CaseList()
-            : this(string.Empty)
+            : this(string.Empty, string.Empty)
         {
         }
 
-        public CaseList(string currentUserPosition)
+        public CaseList(string currentUserPosition, string currentUsername = "")
         {
             InitializeComponent();
             this.currentUserPosition = currentUserPosition;
+            this.currentUsername = currentUsername;
             textBox1.TextChanged += textBox1_TextChanged;
         }
 
@@ -203,6 +205,13 @@ namespace VAWCV5Tubod
         {
             if (!string.Equals(currentUserPosition, "Admin", StringComparison.OrdinalIgnoreCase))
             {
+                UserLogService.Log(
+                    currentUsername,
+                    "UnauthorizedAccess",
+                    "ManageCase",
+                    caseId,
+                    "User attempted to open ManageCase form.");
+
                 MessageBox.Show(
                     "Only users with the Admin role can edit case records.",
                     "Access Denied",
@@ -211,7 +220,7 @@ namespace VAWCV5Tubod
                 return;
             }
 
-            using ManageCase manageCase = new();
+            using ManageCase manageCase = new(currentUsername);
 
             if (!manageCase.LoadCaseForEdit(caseId))
             {

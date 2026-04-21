@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using VAWCV5Tubod.Connection;
 
 namespace VAWCV5Tubod
 {
@@ -13,18 +14,20 @@ namespace VAWCV5Tubod
         private Form? activeForm;
         private readonly string currentUserFullName;
         private readonly string currentUserPosition;
+        private readonly string currentUsername;
         private readonly int currentUserId;
         public bool IsLoggingOut { get; private set; }
 
-        public LandingForm(string fullName, string position, int userId)
+        public LandingForm(string fullName, string position, int userId, string username = "")
         {
             InitializeComponent();
             currentUserFullName = fullName;
             currentUserPosition = position;
+            currentUsername = username;
             currentUserId = userId;
             label1.Text = fullName;
             label2.Text = position;
-            openingForm(new Dashboard());
+            openingForm(new Dashboard(currentUserFullName, currentUsername));
         }
 
         private void pictureBox2_Click(object sender, EventArgs e)
@@ -51,27 +54,27 @@ namespace VAWCV5Tubod
 
         private void FileACaseBtn_Click_1(object sender, EventArgs e)
         {
-            openingForm(new FileACase());
+            openingForm(new FileACase(currentUsername));
         }
 
         private void DashboardBtn_Click_1(object sender, EventArgs e)
         {
-            openingForm(new Dashboard());
+            openingForm(new Dashboard(currentUserFullName, currentUsername));
         }
 
         private void CaseListBtn_Click_1(object sender, EventArgs e)
         {
-            openingForm(new CaseList(currentUserPosition));
+            openingForm(new CaseList(currentUserPosition, currentUsername));
         }
 
         private void ReportsBtn_Click_1(object sender, EventArgs e)
         {
-            openingForm(new Documents());
+            openingForm(new Documents(currentUserFullName, currentUsername));
         }
 
         private void SystemBtn_Click_1(object sender, EventArgs e)
         {
-            openingForm(new SystemManagement(currentUserFullName, currentUserPosition, currentUserId));
+            openingForm(new SystemManagement(currentUserFullName, currentUserPosition, currentUserId, currentUsername));
         }
 
         private void LogoutBtn_Click(object sender, EventArgs e)
@@ -88,6 +91,12 @@ namespace VAWCV5Tubod
             }
 
             IsLoggingOut = true;
+            UserLogService.Log(
+                currentUsername,
+                "Logout",
+                "users",
+                currentUserId,
+                "Logged out of the system.");
 
             if (activeForm != null && !activeForm.IsDisposed)
             {

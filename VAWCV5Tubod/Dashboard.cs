@@ -13,10 +13,11 @@ namespace VAWCV5Tubod
     {
         private readonly Chart caseChart = new();
 
-        public Dashboard()
+        public Dashboard(string currentUserFullName = "", string currentUsername = "")
         {
             InitializeComponent();
-            
+            censusData1.CurrentUserFullName = currentUserFullName;
+            censusData1.CurrentUsername = currentUsername;
         }
 
    
