@@ -15,6 +15,13 @@ namespace VAWCV5Tubod
 {
     public partial class FileACase : Form
     {
+        private enum ImageSourceChoice
+        {
+            None,
+            Upload,
+            Camera
+        }
+
         private const string Ra9262ViolationText =
             "R.A. 9262: Anti Violence Against Women and their Children Act";
 
@@ -58,12 +65,111 @@ namespace VAWCV5Tubod
 
         private void imgComplainantbtn_Click(object? sender, EventArgs e)
         {
-            BrowseAndLoadImage(comp_image);
+            ChooseAndLoadImage(comp_image);
         }
 
         private void imgRespodentBtn_Click(object? sender, EventArgs e)
         {
-            BrowseAndLoadImage(resp_image);
+            ChooseAndLoadImage(resp_image);
+        }
+
+        private void ChooseAndLoadImage(PictureBox targetPictureBox)
+        {
+            ImageSourceChoice choice = PromptForImageSource();
+
+            switch (choice)
+            {
+                case ImageSourceChoice.Upload:
+                    BrowseAndLoadImage(targetPictureBox);
+                    break;
+                case ImageSourceChoice.Camera:
+                    CaptureAndLoadImage(targetPictureBox);
+                    break;
+            }
+        }
+
+        private ImageSourceChoice PromptForImageSource()
+        {
+            using Form promptForm = new()
+            {
+                Text = "Select Image Source",
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                ClientSize = new Size(445, 150)
+            };
+
+            Label promptLabel = new()
+            {
+                Text = "How would you like to add the photo?",
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Arial", 11F, FontStyle.Regular),
+                Location = new Point(20, 20),
+                Size = new Size(405, 35)
+            };
+
+            Button uploadButton = new()
+            {
+                Text = "Upload Existing Photo",
+                DialogResult = DialogResult.Yes,
+                Location = new Point(25, 82),
+                Size = new Size(155, 35)
+            };
+
+            Button cameraButton = new()
+            {
+                Text = "Capture New Photo",
+                DialogResult = DialogResult.No,
+                Location = new Point(190, 82),
+                Size = new Size(150, 35)
+            };
+
+            Button cancelButton = new()
+            {
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel,
+                Location = new Point(350, 82),
+                Size = new Size(70, 35)
+            };
+
+            promptForm.Controls.AddRange(new Control[] { promptLabel, uploadButton, cameraButton, cancelButton });
+            promptForm.AcceptButton = uploadButton;
+            promptForm.CancelButton = cancelButton;
+
+            return promptForm.ShowDialog(this) switch
+            {
+                DialogResult.Yes => ImageSourceChoice.Upload,
+                DialogResult.No => ImageSourceChoice.Camera,
+                _ => ImageSourceChoice.None
+            };
+        }
+
+        private void CaptureAndLoadImage(PictureBox targetPictureBox)
+        {
+            try
+            {
+                using CameraCaptureForm cameraCaptureForm = new();
+
+                if (cameraCaptureForm.ShowDialog(this) != DialogResult.OK ||
+                    cameraCaptureForm.CapturedImage is null)
+                {
+                    return;
+                }
+
+                Image capturedImage = new Bitmap(cameraCaptureForm.CapturedImage);
+                cameraCaptureForm.CapturedImage.Dispose();
+                ReplacePictureBoxImage(targetPictureBox, capturedImage);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Unable to capture an image from the camera.{Environment.NewLine}{ex.Message}",
+                    "Camera Capture Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void BrowseAndLoadImage(PictureBox targetPictureBox)
@@ -81,10 +187,7 @@ namespace VAWCV5Tubod
             try
             {
                 Image newImage = LoadImageCopy(openFileDialog.FileName);
-                Image? previousImage = targetPictureBox.Image;
-
-                targetPictureBox.Image = newImage;
-                previousImage?.Dispose();
+                ReplacePictureBoxImage(targetPictureBox, newImage);
             }
             catch (Exception ex)
             {
@@ -101,6 +204,13 @@ namespace VAWCV5Tubod
             using FileStream stream = new(filePath, FileMode.Open, FileAccess.Read);
             using Image originalImage = Image.FromStream(stream);
             return new Bitmap(originalImage);
+        }
+
+        private static void ReplacePictureBoxImage(PictureBox targetPictureBox, Image newImage)
+        {
+            Image? previousImage = targetPictureBox.Image;
+            targetPictureBox.Image = newImage;
+            previousImage?.Dispose();
         }
 
         private void FileACase_FormClosed(object? sender, FormClosedEventArgs e)
