@@ -22,6 +22,8 @@ namespace VAWCV5Tubod
             Camera
         }
 
+        private const int ContactNumberMaxDigits = 11;
+
         private const string Ra9262ViolationText =
             "R.A. 9262: Anti Violence Against Women and their Children Act";
 
@@ -39,9 +41,9 @@ namespace VAWCV5Tubod
             comp_age.ReadOnly = true;
             resp_age.ReadOnly = true;
             AttachNumericOnlyHandlers(comp_age);
-            AttachNumericOnlyHandlers(comp_contactnumber);
+            AttachNumericOnlyHandlers(comp_contactnumber, ContactNumberMaxDigits);
             AttachNumericOnlyHandlers(resp_age);
-            AttachNumericOnlyHandlers(resp_contactnumber);
+            AttachNumericOnlyHandlers(resp_contactnumber, ContactNumberMaxDigits);
         }
 
         private void FileACase_Load(object? sender, EventArgs e)
@@ -582,8 +584,13 @@ namespace VAWCV5Tubod
             }
         }
 
-        private static void AttachNumericOnlyHandlers(TextBox textBox)
+        private static void AttachNumericOnlyHandlers(TextBox textBox, int maxDigits = 0)
         {
+            if (maxDigits > 0)
+            {
+                textBox.MaxLength = maxDigits;
+            }
+
             textBox.KeyPress += NumericTextBox_KeyPress;
             textBox.TextChanged += NumericTextBox_TextChanged;
         }
@@ -591,6 +598,15 @@ namespace VAWCV5Tubod
         private static void NumericTextBox_KeyPress(object? sender, KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            if (char.IsDigit(e.KeyChar) &&
+                sender is TextBox textBox &&
+                textBox.MaxLength > 0 &&
+                textBox.TextLength - textBox.SelectionLength >= textBox.MaxLength)
             {
                 e.Handled = true;
             }
@@ -605,6 +621,12 @@ namespace VAWCV5Tubod
 
             string originalText = textBox.Text;
             string digitsOnly = new(originalText.Where(char.IsDigit).ToArray());
+            int maxDigits = textBox.MaxLength > 0 ? textBox.MaxLength : 0;
+
+            if (maxDigits > 0 && digitsOnly.Length > maxDigits)
+            {
+                digitsOnly = digitsOnly.Substring(0, maxDigits);
+            }
 
             if (originalText == digitsOnly)
             {
@@ -617,7 +639,9 @@ namespace VAWCV5Tubod
                 .Count(character => !char.IsDigit(character));
 
             textBox.Text = digitsOnly;
-            textBox.SelectionStart = Math.Max(0, selectionStart - removedCharactersBeforeCaret);
+            textBox.SelectionStart = Math.Min(
+                digitsOnly.Length,
+                Math.Max(0, selectionStart - removedCharactersBeforeCaret));
         }
 
         private bool ValidateRequiredInputs()
