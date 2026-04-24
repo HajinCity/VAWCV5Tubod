@@ -105,6 +105,7 @@
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.label28 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -685,7 +686,7 @@
             // 
             this.label18.AutoSize = true;
             this.label18.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(141, 113);
+            this.label18.Location = new System.Drawing.Point(141, 135);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(546, 22);
             this.label18.TabIndex = 276;
@@ -695,11 +696,11 @@
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(172, 91);
+            this.label17.Location = new System.Drawing.Point(367, 91);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(459, 22);
+            this.label17.Size = new System.Drawing.Size(113, 22);
             this.label17.TabIndex = 275;
-            this.label17.Text = "REGION IX, ZAMBOANGA DEL SUR, LAKEWOOD\r\n";
+            this.label17.Text = "REGION IX";
             // 
             // label16
             // 
@@ -814,11 +815,22 @@
             this.pictureBox1.TabIndex = 495;
             this.pictureBox1.TabStop = false;
             // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Font = new System.Drawing.Font("Times New Roman", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label28.Location = new System.Drawing.Point(253, 113);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(346, 22);
+            this.label28.TabIndex = 498;
+            this.label28.Text = "ZAMBOANGA DEL SUR, LAKEWOOD\r\n";
+            // 
             // ReferralForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
+            this.Controls.Add(this.label28);
             this.Controls.Add(this.pictureBox3);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.pictureBox1);
@@ -985,5 +997,6 @@
         private PictureBox pictureBox3;
         private PictureBox pictureBox2;
         private PictureBox pictureBox1;
+        private Label label28;
     }
 }

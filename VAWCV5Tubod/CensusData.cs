@@ -786,6 +786,7 @@ namespace VAWCV5Tubod
                 int height = (int)(bitmap.Height * scale);
                 int x = (e.PageBounds.Width - width) / 2;
                 e.Graphics.DrawImage(bitmap, x, 20, width, height);
+                PrintWatermarkHelper.Draw(e.Graphics, new RectangleF(x, 20, width, height));
             }
         }
 

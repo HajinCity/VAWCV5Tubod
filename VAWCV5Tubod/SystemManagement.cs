@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.WinForms;
 using MySql.Data.MySqlClient;
@@ -14,10 +15,24 @@ namespace VAWCV5Tubod
 {
     public partial class SystemManagement : Form
     {
+        private const string VawcHandbookFileName = "Barangay-VAW-Desk-Handbook.pdf";
+        private const string Ra9262PdfFileName = "Republic Act No. 9262.pdf";
+        private const string Ra9208PdfFileName = "Republic Act 9208.pdf";
+        private const string Ra8353PdfFileName = "R.A. 8353.pdf";
+        private const string Ra7877PdfFileName = "R.A. 7877.pdf";
+        private const string Ra10364PdfFileName = "Republic Act No. 10364.pdf";
+        private const int MaxAdminUsers = 1;
+        private const int MaxSecretaryUsers = 2;
+
         private readonly string currentUserRole;
         private readonly string currentUsername;
         private readonly int currentUserId;
         private DataTable? hotlineData;
+        private bool isOldPasswordVisible;
+        private bool isNewPasswordVisible;
+        private bool isConfirmPasswordVisible;
+        private bool isCreatePasswordVisible;
+        private bool isCreateConfirmPasswordVisible;
 
         public SystemManagement()
             : this(string.Empty, string.Empty, 0, string.Empty)
@@ -48,11 +63,7 @@ namespace VAWCV5Tubod
             ConfigureMiddleInitialTextBox(textBox3);
             ConfigureMiddleInitialTextBox(textBox10);
 
-            textBox4.UseSystemPasswordChar = true;
-            textBox5.UseSystemPasswordChar = true;
-            textBox6.UseSystemPasswordChar = true;
-            textBox11.UseSystemPasswordChar = true;
-            textBox12.UseSystemPasswordChar = true;
+            ConfigurePasswordVisibilityControls();
 
             comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
 
@@ -94,6 +105,79 @@ namespace VAWCV5Tubod
 
             dateTimePicker1.Value = DateTime.Today.AddDays(-30);
             dateTimePicker2.Value = DateTime.Today;
+        }
+
+        private void ConfigurePasswordVisibilityControls()
+        {
+            isOldPasswordVisible = false;
+            isNewPasswordVisible = false;
+            isConfirmPasswordVisible = false;
+            isCreatePasswordVisible = false;
+            isCreateConfirmPasswordVisible = false;
+
+            ConfigurePasswordToggle(pictureBox1);
+            ConfigurePasswordToggle(pictureBox2);
+            ConfigurePasswordToggle(pictureBox3);
+            ConfigurePasswordToggle(pictureBox4);
+            ConfigurePasswordToggle(pictureBox5);
+
+            pictureBox1.Click += pictureBox1_Click;
+            pictureBox2.Click += pictureBox2_Click;
+            pictureBox3.Click += pictureBox3_Click;
+            pictureBox4.Click += pictureBox4_Click;
+            pictureBox5.Click += pictureBox5_Click;
+
+            ApplyPasswordVisibility(textBox4, pictureBox1, isOldPasswordVisible);
+            ApplyPasswordVisibility(textBox5, pictureBox2, isNewPasswordVisible);
+            ApplyPasswordVisibility(textBox6, pictureBox3, isConfirmPasswordVisible);
+            ApplyPasswordVisibility(textBox11, pictureBox4, isCreatePasswordVisible);
+            ApplyPasswordVisibility(textBox12, pictureBox5, isCreateConfirmPasswordVisible);
+        }
+
+        private static void ConfigurePasswordToggle(PictureBox pictureBox)
+        {
+            pictureBox.Cursor = Cursors.Hand;
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox.TabStop = false;
+        }
+
+        private static void ApplyPasswordVisibility(TextBox passwordTextBox, PictureBox pictureBox, bool isVisible)
+        {
+            passwordTextBox.UseSystemPasswordChar = !isVisible;
+            pictureBox.Image = isVisible
+                ? Properties.Resources.Eye
+                : Properties.Resources.Closed_Eye;
+            pictureBox.AccessibleName = isVisible ? "Hide password" : "Show password";
+        }
+
+        private void pictureBox1_Click(object? sender, EventArgs e)
+        {
+            isOldPasswordVisible = !isOldPasswordVisible;
+            ApplyPasswordVisibility(textBox4, pictureBox1, isOldPasswordVisible);
+        }
+
+        private void pictureBox2_Click(object? sender, EventArgs e)
+        {
+            isNewPasswordVisible = !isNewPasswordVisible;
+            ApplyPasswordVisibility(textBox5, pictureBox2, isNewPasswordVisible);
+        }
+
+        private void pictureBox3_Click(object? sender, EventArgs e)
+        {
+            isConfirmPasswordVisible = !isConfirmPasswordVisible;
+            ApplyPasswordVisibility(textBox6, pictureBox3, isConfirmPasswordVisible);
+        }
+
+        private void pictureBox4_Click(object? sender, EventArgs e)
+        {
+            isCreatePasswordVisible = !isCreatePasswordVisible;
+            ApplyPasswordVisibility(textBox11, pictureBox4, isCreatePasswordVisible);
+        }
+
+        private void pictureBox5_Click(object? sender, EventArgs e)
+        {
+            isCreateConfirmPasswordVisible = !isCreateConfirmPasswordVisible;
+            ApplyPasswordVisibility(textBox12, pictureBox5, isCreateConfirmPasswordVisible);
         }
 
         private void SystemManagement_Load(object? sender, EventArgs e)
@@ -579,6 +663,12 @@ namespace VAWCV5Tubod
                     WHERE username = @username;
                     """;
 
+                const string roleCountQuery = """
+                    SELECT COUNT(*)
+                    FROM users
+                    WHERE LOWER(TRIM(position)) = LOWER(@position);
+                    """;
+
                 const string insertQuery = """
                     INSERT INTO users (username, password, lastname, firstname, middlename, position)
                     VALUES (@username, @password, @lastname, @firstname, @middlename, @position);
@@ -586,15 +676,18 @@ namespace VAWCV5Tubod
 
                 using MySqlConnection connection = DbConnectionFactory.CreateConnection();
                 connection.Open();
+                using MySqlTransaction transaction = connection.BeginTransaction();
                 int newUserId = 0;
 
                 using (MySqlCommand existsCommand = new(existsQuery, connection))
                 {
+                    existsCommand.Transaction = transaction;
                     existsCommand.Parameters.AddWithValue("@username", username);
                     int existingUsers = Convert.ToInt32(existsCommand.ExecuteScalar());
 
                     if (existingUsers > 0)
                     {
+                        transaction.Rollback();
                         MessageBox.Show(
                             "That username is already being used. Please choose a different username.",
                             "Duplicate Username",
@@ -606,8 +699,30 @@ namespace VAWCV5Tubod
                     }
                 }
 
+                int roleLimit = GetRoleLimit(role);
+
+                using (MySqlCommand roleCountCommand = new(roleCountQuery, connection))
+                {
+                    roleCountCommand.Transaction = transaction;
+                    roleCountCommand.Parameters.AddWithValue("@position", role);
+                    int existingRoleUsers = Convert.ToInt32(roleCountCommand.ExecuteScalar());
+
+                    if (existingRoleUsers >= roleLimit)
+                    {
+                        transaction.Rollback();
+                        MessageBox.Show(
+                            BuildRoleLimitExceededMessage(role, roleLimit),
+                            "Role Limit Exceeded",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        comboBox1.Focus();
+                        return;
+                    }
+                }
+
                 using (MySqlCommand insertCommand = new(insertQuery, connection))
                 {
+                    insertCommand.Transaction = transaction;
                     insertCommand.Parameters.AddWithValue("@username", username);
                     insertCommand.Parameters.AddWithValue("@password", PasswordSecurity.HashPassword(password));
                     insertCommand.Parameters.AddWithValue("@lastname", lastName);
@@ -617,6 +732,8 @@ namespace VAWCV5Tubod
                     insertCommand.ExecuteNonQuery();
                     newUserId = Convert.ToInt32(insertCommand.LastInsertedId);
                 }
+
+                transaction.Commit();
 
                 ClearNewUserFields();
                 LoadUsersGrid();
@@ -642,6 +759,28 @@ namespace VAWCV5Tubod
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
+        }
+
+        private static int GetRoleLimit(string role)
+        {
+            if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return MaxAdminUsers;
+            }
+
+            if (string.Equals(role, "Secretary", StringComparison.OrdinalIgnoreCase))
+            {
+                return MaxSecretaryUsers;
+            }
+
+            return int.MaxValue;
+        }
+
+        private static string BuildRoleLimitExceededMessage(string role, int roleLimit)
+        {
+            string userLabel = roleLimit == 1 ? "user" : "users";
+
+            return $"The {role} role limit has been reached. A maximum of {roleLimit} {userLabel} can be assigned to the {role} role.";
         }
 
         private void button3_Click(object? sender, EventArgs e)
@@ -996,11 +1135,39 @@ namespace VAWCV5Tubod
 
         private void LoadRaArticles()
         {
-            LoadArticleIntoPanel(panel2, "ra9262.txt");
-            LoadArticleIntoPanel(panel3, "ra9208.txt");
-            LoadArticleIntoPanel(panel4, "ra8353.txt");
-            LoadArticleIntoPanel(panel5, "ra7877.txt");
-            LoadArticleIntoPanel(panel6, "ra10364.txt");
+            LoadOfflinePdfIntoPanel(panel2, Ra9262PdfFileName, "Republic Act No. 9262");
+            LoadOfflinePdfIntoPanel(panel3, Ra9208PdfFileName, "Republic Act No. 9208");
+            LoadOfflinePdfIntoPanel(panel4, Ra8353PdfFileName, "Republic Act No. 8353");
+            LoadOfflinePdfIntoPanel(panel5, Ra7877PdfFileName, "Republic Act No. 7877");
+            LoadOfflinePdfIntoPanel(panel6, Ra10364PdfFileName, "Republic Act No. 10364");
+        }
+
+        private async void LoadOfflinePdfIntoPanel(Panel targetPanel, string pdfFileName, string documentTitle)
+        {
+            targetPanel.Controls.Clear();
+            targetPanel.AutoScroll = false;
+
+            string? pdfPath = ResolveArticlePath(pdfFileName);
+
+            if (pdfPath == null)
+            {
+                ShowPdfMessage(
+                    targetPanel,
+                    $"Unable to find the {documentTitle} PDF file. Make sure the Articles folder is included beside the application.");
+                return;
+            }
+
+            ToolStrip toolbar = CreateOfflinePdfToolbar(documentTitle, pdfPath);
+            Panel readerHost = new()
+            {
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.White
+            };
+
+            targetPanel.Controls.Add(readerHost);
+            targetPanel.Controls.Add(toolbar);
+
+            await LoadPdfIntoViewerAsync(readerHost, pdfPath, documentTitle);
         }
 
         private async void LoadVawcHandbook()
@@ -1008,82 +1175,158 @@ namespace VAWCV5Tubod
             panel7.Controls.Clear();
             panel7.AutoScroll = false;
 
-            string? handbookPath = ResolveArticlePath("Barangay-VAW-Desk-Handbook.pdf");
+            string? handbookPath = ResolveArticlePath(VawcHandbookFileName);
 
             if (handbookPath == null)
             {
-                ShowHandbookMessage("Unable to find the handbook PDF file.");
+                ShowHandbookMessage(
+                    "Unable to find the handbook PDF file. Make sure the Articles folder is included beside the application.");
                 return;
             }
 
+            ToolStrip toolbar = CreateHandbookToolbar(handbookPath);
+            Panel readerHost = new()
+            {
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.White
+            };
+
+            panel7.Controls.Add(readerHost);
+            panel7.Controls.Add(toolbar);
+
+            await LoadHandbookIntoViewerAsync(readerHost, handbookPath);
+        }
+
+        private ToolStrip CreateHandbookToolbar(string handbookPath)
+        {
+            return CreateOfflinePdfToolbar("Barangay VAW Desk Handbook", handbookPath);
+        }
+
+        private ToolStrip CreateOfflinePdfToolbar(string documentTitle, string pdfPath)
+        {
+            ToolStrip toolbar = new()
+            {
+                Dock = DockStyle.Top,
+                GripStyle = ToolStripGripStyle.Hidden,
+                BackColor = System.Drawing.Color.White,
+                Padding = new Padding(8, 6, 8, 6),
+                ImageScalingSize = new System.Drawing.Size(18, 18)
+            };
+
+            ToolStripLabel titleLabel = new(documentTitle)
+            {
+                Font = new System.Drawing.Font("Arial", 11F, System.Drawing.FontStyle.Bold)
+            };
+
+            ToolStripLabel offlineLabel = new("Offline PDF")
+            {
+                ForeColor = System.Drawing.Color.DimGray
+            };
+
+            ToolStripButton openButton = new("Open in Windows")
+            {
+                Alignment = ToolStripItemAlignment.Right,
+                DisplayStyle = ToolStripItemDisplayStyle.Text
+            };
+            openButton.Click += (_, _) => OpenPdfInWindows(pdfPath, documentTitle);
+
+            toolbar.Items.Add(titleLabel);
+            toolbar.Items.Add(new ToolStripSeparator());
+            toolbar.Items.Add(offlineLabel);
+            toolbar.Items.Add(openButton);
+
+            return toolbar;
+        }
+
+        private async Task LoadHandbookIntoViewerAsync(Control targetControl, string handbookPath)
+        {
+            await LoadPdfIntoViewerAsync(targetControl, handbookPath, "handbook");
+        }
+
+        private async Task LoadPdfIntoViewerAsync(Control targetControl, string pdfPath, string documentTitle)
+        {
+            WebView2 handbookViewer = new()
+            {
+                Dock = DockStyle.Fill,
+                BackColor = System.Drawing.Color.White
+            };
+
+            handbookViewer.NavigationStarting += (_, e) =>
+            {
+                if (!Uri.TryCreate(e.Uri, UriKind.Absolute, out Uri? requestedUri))
+                {
+                    return;
+                }
+
+                bool isLocalPdf = requestedUri.IsFile &&
+                    string.Equals(requestedUri.LocalPath, pdfPath, StringComparison.OrdinalIgnoreCase);
+
+                if (!isLocalPdf && requestedUri.Scheme.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Cancel = true;
+                }
+            };
+
+            targetControl.Controls.Add(handbookViewer);
+
             try
             {
-                Button openButton = new()
-                {
-                    Text = "Open Handbook PDF",
-                    Width = 190,
-                    Height = 40,
-                    Top = 70,
-                    Left = 20
-                };
-
-                openButton.Click += (_, _) =>
-                {
-                    try
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = handbookPath,
-                            UseShellExecute = true
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(
-                            $"Unable to open the handbook PDF.{Environment.NewLine}{ex.Message}",
-                            "VAWC Handbook",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning);
-                    }
-                };
-
-                Panel buttonPanel = new()
-                {
-                    Dock = DockStyle.Top,
-                    Height = 70
-                };
-
-                Label titleLabel = new()
-                {
-                    AutoSize = false,
-                    Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Bold),
-                    Text = "Barangay VAW Desk Handbook",
-                    TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
-                    Dock = DockStyle.Top,
-                    Height = 56
-                };
-
-                WebView2 handbookViewer = new()
-                {
-                    Dock = DockStyle.Fill,
-                    BackColor = System.Drawing.Color.White
-                };
-
-                buttonPanel.Controls.Add(openButton);
-
-                panel7.Controls.Add(handbookViewer);
-                panel7.Controls.Add(buttonPanel);
-                panel7.Controls.Add(titleLabel);
-
                 await handbookViewer.EnsureCoreWebView2Async();
-                handbookViewer.Source = new Uri(handbookPath);
+
+                if (handbookViewer.CoreWebView2 != null)
+                {
+                    handbookViewer.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                    handbookViewer.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                    handbookViewer.CoreWebView2.Settings.AreDefaultContextMenusEnabled = true;
+                }
+
+                handbookViewer.Source = new Uri(pdfPath);
             }
             catch (Exception ex)
             {
-                ShowHandbookMessage(
-                    "Unable to prepare the handbook viewer." +
+                handbookViewer.Dispose();
+                ShowPdfMessage(
+                    targetControl,
+                    $"Unable to prepare the embedded {documentTitle} viewer." +
+                    Environment.NewLine + Environment.NewLine +
+                    "You can still open the bundled PDF with the default Windows PDF reader." +
                     Environment.NewLine + Environment.NewLine +
                     ex.Message);
+            }
+        }
+
+        private void OpenHandbookInWindows(string handbookPath)
+        {
+            OpenPdfInWindows(handbookPath, "VAWC Handbook");
+        }
+
+        private void OpenPdfInWindows(string pdfPath, string documentTitle)
+        {
+            try
+            {
+                if (!File.Exists(pdfPath))
+                {
+                    MessageBox.Show(
+                        $"Unable to find the {documentTitle} PDF file.",
+                        documentTitle,
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = pdfPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Unable to open the {documentTitle} PDF.{Environment.NewLine}{ex.Message}",
+                    documentTitle,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
             }
         }
 
@@ -1146,6 +1389,16 @@ namespace VAWCV5Tubod
 
         private void ShowHandbookMessage(string message)
         {
+            ShowHandbookMessage(panel7, message);
+        }
+
+        private static void ShowHandbookMessage(Control targetControl, string message)
+        {
+            ShowPdfMessage(targetControl, message);
+        }
+
+        private static void ShowPdfMessage(Control targetControl, string message)
+        {
             TextBox messageBox = new()
             {
                 Dock = DockStyle.Fill,
@@ -1158,7 +1411,8 @@ namespace VAWCV5Tubod
                 Text = message
             };
 
-            panel7.Controls.Add(messageBox);
+            targetControl.Controls.Clear();
+            targetControl.Controls.Add(messageBox);
         }
 
         private void textBox3_TextChanged(object? sender, EventArgs e)

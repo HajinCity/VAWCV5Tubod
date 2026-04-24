@@ -235,11 +235,7 @@ namespace VAWCV5Tubod
             dashboard.Show();
             Hide();
         }
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
+       
         private void fpWindows_Click(object? sender, EventArgs e)
         {
             using ForgotPasswordChangePass forgotPasswordChangePass = new();
@@ -254,6 +250,11 @@ namespace VAWCV5Tubod
                 .FirstOrDefault();
 
             return middleInitial == default ? string.Empty : middleInitial.ToString();
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

@@ -189,6 +189,7 @@ namespace VAWCV5Tubod
             float generatedByY = drawY + drawHeight + GeneratedByGap;
 
             e.Graphics.DrawImage(pendingPrintBitmap, drawX, drawY, drawWidth, drawHeight);
+            PrintWatermarkHelper.Draw(e.Graphics, new RectangleF(drawX, drawY, drawWidth, drawHeight));
             e.Graphics.DrawString(generatedByText, generatedByFont, Brushes.Black, drawX, generatedByY);
             e.HasMorePages = false;
         }

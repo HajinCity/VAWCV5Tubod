@@ -124,6 +124,7 @@
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
@@ -871,7 +872,7 @@
             // 
             this.label20.AutoSize = true;
             this.label20.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label20.Location = new System.Drawing.Point(336, 172);
+            this.label20.Location = new System.Drawing.Point(336, 188);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(158, 24);
             this.label20.TabIndex = 411;
@@ -881,7 +882,7 @@
             // 
             this.label19.AutoSize = true;
             this.label19.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(139, 145);
+            this.label19.Location = new System.Drawing.Point(139, 161);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(546, 24);
             this.label19.TabIndex = 410;
@@ -891,7 +892,7 @@
             // 
             this.label18.AutoSize = true;
             this.label18.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(229, 92);
+            this.label18.Location = new System.Drawing.Point(224, 113);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(397, 24);
             this.label18.TabIndex = 409;
@@ -901,11 +902,11 @@
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(67, 64);
+            this.label17.Location = new System.Drawing.Point(359, 64);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(706, 24);
+            this.label17.Size = new System.Drawing.Size(120, 24);
             this.label17.TabIndex = 408;
-            this.label17.Text = "REGION IX, ZAMBOANGA DEL SUR, LAKEWOOD, BARANGAY TUBOD";
+            this.label17.Text = "REGION IX";
             // 
             // label16
             // 
@@ -1027,11 +1028,22 @@
             this.pictureBox3.TabIndex = 494;
             this.pictureBox3.TabStop = false;
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(109, 88);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(586, 24);
+            this.label5.TabIndex = 495;
+            this.label5.Text = "ZAMBOANGA DEL SUR, LAKEWOOD, BARANGAY TUBOD";
+            // 
             // IntakeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.pictureBox3);
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.panel27);
@@ -1236,5 +1248,6 @@
         private PictureBox pictureBox1;
         private PictureBox pictureBox2;
         private PictureBox pictureBox3;
+        private Label label5;
     }
 }
